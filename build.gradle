@@ -1,0 +1,78 @@
+plugins {
+    id "fabric-loom" version "0.10-SNAPSHOT"
+    id "maven-publish"
+}
+
+sourceCompatibility = targetCompatibility = JavaVersion.VERSION_16
+
+version = project.modVersion
+archivesBaseName = project.archivesBaseName
+
+
+repositories {
+    mavenLocal()
+    maven { url "https://maven.parchmentmc.org" }
+    maven { url "https://jitpack.io" }
+}
+
+dependencies {
+    minecraft "com.mojang:minecraft:${project.mcVersion}"
+    mappings loom.officialMojangMappings()
+    modImplementation "net.fabricmc:fabric-loader:${project.loaderVersion}"
+
+    modImplementation "com.github.chocohead:fabric-asm:2.3" //for testing compatibility
+}
+
+sourceSets {
+    testmod {
+        compileClasspath += main.output
+        compileClasspath += main.compileClasspath
+        runtimeClasspath += main.output
+        runtimeClasspath += main.runtimeClasspath
+    }
+}
+
+import net.fabricmc.loom.task.RunClientTask
+
+task runTestMod(type: RunClientTask) {
+    classpath = configurations.runtimeClasspath
+    classpath sourceSets.main.output
+    classpath sourceSets.testmod.output
+}
+
+processResources {
+    inputs.property("version", project.modVersion)
+
+    filesMatching("fabric.mod.json") {
+        expand("version" : project.modVersion)
+    }
+}
+
+tasks.withType(JavaCompile) {
+    it.options.encoding = "UTF-8"
+    it.options.release.set(16)
+}
+
+java {
+    withSourcesJar()
+}
+
+tasks.jar {
+    from("LICENSE")
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            artifact(remapJar) {
+                builtBy remapJar
+            }
+            artifact(sourcesJar) {
+                builtBy remapSourcesJar
+            }
+        }
+    }
+    repositories {
+        mavenLocal()
+    }
+}

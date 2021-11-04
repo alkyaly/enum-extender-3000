@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "id": "enum-extender-3000-test",
+  "version": "e",
+  "name": "Enum Extender 3000 Test",
+  "license": "LGPLv3",
+  "environment": "*",
+
+  "entrypoints": {
+    "main": [
+      "io.github.alkyaly.enumextendertest.TestMain",
+      "io.github.alkyaly.enumextendertest.CompatibilityTestMain"
+    ],
+    "mm:early_risers": [
+      "io.github.alkyaly.enumextendertest.CompatibilityTest"
+    ]
+  }
+}
