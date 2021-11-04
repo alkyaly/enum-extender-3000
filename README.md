@@ -47,8 +47,8 @@ If the enum you're trying to add has an abstract method, you can define a subcla
 which takes the enum to extend and an array of method nodes of the methods to override.
 
 <br>
-<br>
 Example:
+
 ```java
 @Override
 public void onInitialize() {
