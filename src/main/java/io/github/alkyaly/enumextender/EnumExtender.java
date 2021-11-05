@@ -16,7 +16,6 @@ import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.security.ProtectionDomain;
 import java.util.Map;
@@ -62,10 +61,8 @@ public final class EnumExtender {
             Preconditions.checkArgument(childEnum.getSuperclass() == enun,
                     "childEnum must be a subclass of the provided enum!");
 
-        Method allocateInstance = UNSAFE.getClass().getDeclaredMethod("allocateInstance", Class.class);
-        allocateInstance.setAccessible(true);
         //skips java enum constructor restriction by not calling it
-        T constant = (T) allocateInstance.invoke(UNSAFE, childEnum != null ? childEnum : enun);
+        T constant = (T) UNSAFE.allocateInstance(childEnum != null ? childEnum : enun);
 
         //since we didn't call the constructor, we must initialize the fields manually
         if (args != null)
