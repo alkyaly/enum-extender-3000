@@ -17,7 +17,7 @@ repositories {
 
 dependencies {
     //[...]
-    modImplementation(include("com.github.alkyaly:enum-extender-3000:$version")!!)
+    modImplementation(include("com.github.alkyaly:enum-extender-3000:master-SNAPSHOT")!!)
     //[...]
 }
 ```
@@ -35,7 +35,7 @@ repositories {
 
 dependencies {
     //[...]
-    modImplementation(include('com.github.alkyaly:enum-extender-3000:${version}'))
+    modImplementation(include('com.github.alkyaly:enum-extender-3000:master-SNAPSHOT'))
     //[...]
 }
 ```
