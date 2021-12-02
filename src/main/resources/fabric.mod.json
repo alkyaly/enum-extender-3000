@@ -2,24 +2,11 @@
   "schemaVersion": 1,
   "id": "enum-extender-3000",
   "version": "${version}",
-
   "name": "Enum Extender 3000",
-  "description": "hahayes",
-  "authors": [
-    "alkyaly"
-  ],
+  "authors": [ "alkyaly" ],
   "contact": {
-    "issues": "https://github.com/alkyaly/Enum-Extender-3000/issues",
     "sources": "https://github.com/alkyaly/Enum-Extender-3000/"
   },
-
   "license": "LGPLv3",
-
-  "environment": "*",
-
-  "depends": {
-    "fabricloader": ">=0.7.4",
-    "java": ">=16",
-    "minecraft": ">=1.17"
-  }
+  "environment": "*"
 }

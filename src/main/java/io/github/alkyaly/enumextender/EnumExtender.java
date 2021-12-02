@@ -33,7 +33,7 @@ public final class EnumExtender {
      * Creates a new enum constant and adds it to the $VALUES array
      *
      * @param enun         the enum to create a constant of
-     * @param childEnum    pptional enum class for abstract enums
+     * @param childEnum    optional enum class for abstract enums
      * @param constantName the constant name
      * @param args         a map of field names and their values to set
      * @return the new constant
@@ -43,10 +43,11 @@ public final class EnumExtender {
             T constant = createConstant(enun, childEnum, args);
             int len = changeValues(enun, constant) - 1;
             setEnumFields(constant, constantName, len);
+            clearEnumConstants(enun);
 
             return constant;
         } catch (ReflectiveOperationException e) {
-            throw new RuntimeException("Something went wrong while adding" + constantName + " to enum " + enun.getName());
+            throw new RuntimeException("Something went wrong while adding " + constantName + " to enum " + enun.getName(), e);
         }
     }
 
@@ -92,6 +93,8 @@ public final class EnumExtender {
             for (Field field : enumCls.getDeclaredFields()) {
                 if (!Modifier.isStatic(field.getModifiers())) continue;
                 if ((field.getModifiers() & 0x00001000) == 0) continue; //is synthetic
+                //fixme: Class#arrayType actually instantiates the type, which is slow and bad
+                if (!field.getType().isArray() || field.getType() != enumCls.arrayType()) continue;
                 valuesField = field;
                 break;
             }
@@ -100,7 +103,7 @@ public final class EnumExtender {
         Objects.requireNonNull(valuesField, "Could not find $VALUES field in class " + enumCls.getName());
         valuesField.setAccessible(true);
 
-        Object[] arr = (Object[]) valuesField.get(null);
+        T[] arr = (T[]) valuesField.get(null);
         T[] nw = extendArray(arr, enumCls, putLast);
         //can't set with reflection
         UNSAFE.putObject(UNSAFE.staticFieldBase(valuesField), UNSAFE.staticFieldOffset(valuesField), nw);
@@ -115,7 +118,7 @@ public final class EnumExtender {
      * @param putLast the constant to put on last
      * @return the new array
      */
-    private static <T extends Enum<T>> T[] extendArray(Object[] array, Class<T> cls, T putLast) {
+    private static <T extends Enum<T>> T[] extendArray(T[] array, Class<T> cls, T putLast) {
         T[] nwArray = (T[]) Array.newInstance(cls, array.length + 1);
         System.arraycopy(array, 0, nwArray, 0, array.length);
         nwArray[nwArray.length - 1] = putLast;
@@ -129,7 +132,7 @@ public final class EnumExtender {
      * @param name     the name
      * @param ordinal  the ordinal
      */
-    private static <T extends Enum<T>> void setEnumFields(T constant, String name, int ordinal) throws NoSuchFieldException, SecurityException {
+    private static <T extends Enum<T>> void setEnumFields(T constant, String name, int ordinal) throws NoSuchFieldException {
         Field ordField = Enum.class.getDeclaredField("ordinal");
         Field nameField = Enum.class.getDeclaredField("name");
 
@@ -137,6 +140,14 @@ public final class EnumExtender {
         //let's set it with Unsafe instead
         UNSAFE.putInt(constant, UNSAFE.objectFieldOffset(ordField), ordinal);
         UNSAFE.putObject(constant, UNSAFE.objectFieldOffset(nameField), name);
+    }
+
+    private static <T extends Enum<T>> void clearEnumConstants(Class<T> clazz) throws NoSuchFieldException {
+        Field enumConstants = Class.class.getDeclaredField("enumConstants");
+        Field enumConstantDirectory = Class.class.getDeclaredField("enumConstantDirectory");
+
+        UNSAFE.putObject(clazz, UNSAFE.objectFieldOffset(enumConstants), null);
+        UNSAFE.putObject(clazz, UNSAFE.objectFieldOffset(enumConstantDirectory), null);
     }
 
     /**
@@ -162,7 +173,7 @@ public final class EnumExtender {
                     method.access,
                     method.name,
                     method.desc,
-                    null,
+                    method.signature,
                     method.exceptions.toArray(new String[0])
             );
             method.accept(visitor);
@@ -199,7 +210,7 @@ public final class EnumExtender {
                     String.class, byte[].class, int.class, int.class, ClassLoader.class, ProtectionDomain.class
             ));
         } catch (Throwable t) {
-            throw new IllegalStateException("Could not get jdk/internal/misc/Unsafe#defineClass method handle!", t);
+            throw new IllegalStateException("Could not get Unsafe#defineClass method handle!", t);
         }
     }
 }
